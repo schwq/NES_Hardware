@@ -146,6 +146,9 @@
     <ClCompile Include="Bus_Nes.cpp" />
     <ClCompile Include="cpu_6502.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="README.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
