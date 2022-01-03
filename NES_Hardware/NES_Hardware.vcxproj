@@ -139,12 +139,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\olcPixelGameEngine\olcPixelGameEngine.h" />
     <ClInclude Include="Bus_Nes.h" />
     <ClInclude Include="cpu_6502.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bus_Nes.cpp" />
     <ClCompile Include="cpu_6502.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="README.md" />
