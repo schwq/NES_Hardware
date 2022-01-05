@@ -868,10 +868,11 @@ std::map<uint16_t, std::string> cpu_6502::disassemble(uint16_t nStart, uint16_t 
 		else if (lookup[opcode].addrmode == &cpu_6502::REL)
 		{
 			value = bus->read(addr, true); addr++;
-			sInst += "$" + hex(value, 2) + " [$" + hex(addr + value, 4) + "] {REL}";
+			sInst += "$" + hex(value, 2) + " [$" + hex(addr + (int8_t)value, 4) + "] {REL}";
 		}
 		mapLines[line_addr] = sInst;
 	}
 
 	return mapLines;
 }
+ n   

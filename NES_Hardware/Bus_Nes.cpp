@@ -17,3 +17,4 @@ uint8_t Bus_Nes::read(uint16_t address, bool read_only) {
 		return ram[address];
 	return 0x00;
 }
+ 
