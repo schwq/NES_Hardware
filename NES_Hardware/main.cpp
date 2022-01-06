@@ -8,26 +8,41 @@
 class Demo_olc6502 : public olc::PixelGameEngine {
 public:
 	Demo_olc6502() { sAppName = "NES EMULATOR"; }
+private:
+	// The NES
 	Bus_Nes nes;
+	std::shared_ptr<cartridge> cart;
+	bool bEmulationRun = false;
+	float fResidualTime = 0.0f;
+
+private:
+	// Support Utilities
 	std::map<uint16_t, std::string> mapAsm;
-	std::string hex(uint32_t n, uint8_t d) {
+
+	std::string hex(uint32_t n, uint8_t d)
+	{
 		std::string s(d, '0');
 		for (int i = d - 1; i >= 0; i--, n >>= 4)
 			s[i] = "0123456789ABCDEF"[n & 0xF];
 		return s;
 	};
-	void DrawRam(int x, int y, uint16_t addr, int rows, int columns) {
-		int ramx = x, ramy = y;
-		for (int row = 0; row < rows; row++) {
-			std::string offset = "$" + hex(addr, 4) + ":";
-			for (int col = 0; col < columns; col++) {
-				offset += " " + hex(nes.read(addr, true), 2);
-				addr += 1;
+
+	void DrawRam(int x, int y, uint16_t nAddr, int nRows, int nColumns)
+	{
+		int nRamX = x, nRamY = y;
+		for (int row = 0; row < nRows; row++)
+		{
+			std::string sOffset = "$" + hex(nAddr, 4) + ":";
+			for (int col = 0; col < nColumns; col++)
+			{
+				sOffset += " " + hex(nes.cpuread(nAddr, true), 2);
+				nAddr += 1;
 			}
-			DrawString(ramx, ramy, offset);
-			ramy += 10;
+			DrawString(nRamX, nRamY, sOffset);
+			nRamY += 10;
 		}
 	}
+
 	void DrawCpu(int x, int y)
 	{
 		std::string status = "STATUS: ";
@@ -78,57 +93,77 @@ public:
 	}
 
 	bool OnUserCreate() {
-		std::stringstream ss;
-		ss << "A2 0F 8E 00 00 A2 0F 8E 01 00 AC 00 00 A9 00 18 6D 01 00 88 D0 FA 8D 02 00 EA EA EA";
-		uint16_t offset = 0x8000;
-		while (!ss.eof()) {
-			std::string b;
-			ss >> b;
-			nes.ram[offset++] = (uint8_t)std::stoul(b, nullptr, 16);
-		}
+		// Load the cartridge
+		cart = std::make_shared<cartridge>("nestest.nes");
+		if (!cart->ImageValid())
+			return false;
 
-		nes.ram[0xFFFC] = 0x00;
-		nes.ram[0xFFFD] = 0x80;
+		// Insert into NES
+		nes.insertCartridge(cart);
 
+		// Extract dissassembly
 		mapAsm = nes.cpu.disassemble(0x0000, 0xFFFF);
-		nes.cpu.reset();
+
+		// Reset NES
+		nes.reset();
 		return true;
 	}
 	bool OnUserUpdate(float fElapsedTime)
 	{
-		Clear(olc::DARK_BLUE);
-
-
-		if (GetKey(olc::Key::SPACE).bPressed)
 		{
-			do
+			Clear(olc::DARK_BLUE);
+
+
+
+			if (bEmulationRun)
 			{
-				nes.cpu.clock();
-			} while (!nes.cpu.complete());
+				if (fResidualTime > 0.0f)
+					fResidualTime -= fElapsedTime;
+				else
+				{
+					fResidualTime += (1.0f / 60.0f) - fElapsedTime;
+					do { nes.clock(); } while (!nes.ppu.frame_complete);
+					nes.ppu.frame_complete = false;
+				}
+			}
+			else
+			{
+				// Emulate code step-by-step
+				if (GetKey(olc::Key::C).bPressed)
+				{
+					// Clock enough times to execute a whole CPU instruction
+					do { nes.clock(); } while (!nes.cpu.complete());
+					// CPU clock runs slower than system clock, so it may be
+					// complete for additional system clock cycles. Drain
+					// those out
+					do { nes.clock(); } while (nes.cpu.complete());
+				}
+
+				// Emulate one whole frame
+				if (GetKey(olc::Key::F).bPressed)
+				{
+					// Clock enough times to draw a single frame
+					do { nes.clock(); } while (!nes.ppu.frame_complete);
+					// Use residual clock cycles to complete current instruction
+					do { nes.clock(); } while (!nes.cpu.complete());
+					// Reset frame completion flag
+					nes.ppu.frame_complete = false;
+				}
+			}
+
+
+			if (GetKey(olc::Key::SPACE).bPressed) bEmulationRun = !bEmulationRun;
+			if (GetKey(olc::Key::R).bPressed) nes.reset();
+
+			DrawCpu(516, 2);
+			DrawCode(516, 72, 26);
+
+			DrawSprite(0, 0, &nes.ppu.GetScreen(), 2);
+			return true;
+
 		}
 
-		if (GetKey(olc::Key::R).bPressed)
-			nes.cpu.reset();
-
-		if (GetKey(olc::Key::I).bPressed)
-			nes.cpu.irq();
-
-		if (GetKey(olc::Key::N).bPressed)
-			nes.cpu.nmi();
-
-		// Draw Ram Page 0x00		
-		DrawRam(2, 2, 0x0000, 16, 16);
-		DrawRam(2, 182, 0x8000, 16, 16);
-		DrawCpu(448, 2);
-		DrawCode(448, 72, 26);
-
-
-		DrawString(10, 370, "SPACE = Step Instruction    R = RESET    I = IRQ    N = NMI");
-
-		return true;
 	}
-
-
 
 
 };
@@ -136,7 +171,7 @@ public:
 int main()
 {
 	Demo_olc6502 demo;
-	demo.Construct(680, 480, 2, 2);
+	demo.Construct(780, 480, 2, 2);
 	demo.Start();
 	return 0;
 }

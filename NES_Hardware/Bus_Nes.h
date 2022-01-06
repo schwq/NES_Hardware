@@ -2,7 +2,8 @@
 #include <cstdint>
 #include <array>
 #include "cpu_6502.h"
-
+#include "ppu_2C02.h"
+#include "cartridge.h"
 
 class Bus_Nes
 {
@@ -12,10 +13,19 @@ public:
 
 public:
 	cpu_6502 cpu;
-	std::array<uint8_t, 64 * 1024> ram; // RAM
+	ppu_2C02 ppu;
+	std::shared_ptr<cartridge> cart;
+	uint8_t cpuRam[2048];
 
 public:
-	void write(uint16_t address, uint8_t data);
-	uint8_t read(uint16_t address, bool read_only = false);
+	void cpuwrite(uint16_t address, uint8_t data);
+	uint8_t cpuread(uint16_t address, bool read_only = false);
+
+private:
+	uint32_t system_clock_counter = 0;
+public:
+	void insertCartridge(const std::shared_ptr<cartridge>& cartridge);
+	void reset();
+	void clock();
 };
  
