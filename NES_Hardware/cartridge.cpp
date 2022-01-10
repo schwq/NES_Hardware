@@ -94,3 +94,8 @@ bool cartridge::ppuwrite(uint16_t address, uint8_t data) {
 		return false;
 	}
 }
+
+void cartridge::reset() {
+	if (pMapper != nullptr)
+		pMapper->reset();
+}

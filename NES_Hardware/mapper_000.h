@@ -12,5 +12,6 @@ public:
     bool cpuMapWrite(uint16_t address, uint32_t& mapper_addr) override;
     bool ppuMapRead(uint16_t address, uint32_t& mapper_addr) override;
     bool ppuMapWrite(uint16_t address, uint32_t& mapper_addr) override;
+    void reset() override;
 };
 

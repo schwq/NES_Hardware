@@ -42,3 +42,5 @@ bool mapper_000::ppuMapWrite(uint16_t address, uint32_t& mapped_addr) {
 
 	return false;
 }
+
+void mapper_000::reset() {}

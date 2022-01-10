@@ -37,5 +37,7 @@ public:
 
 	bool ppuread(uint16_t address, uint8_t& data);
 	bool ppuwrite(uint16_t address, uint8_t data);
+
+	void reset();
 };
 

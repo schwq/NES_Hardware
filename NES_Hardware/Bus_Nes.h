@@ -16,6 +16,7 @@ public:
 	ppu_2C02 ppu;
 	std::shared_ptr<cartridge> cart;
 	uint8_t cpuRam[2048];
+	uint8_t controller[2];
 
 public:
 	void cpuwrite(uint16_t address, uint8_t data);
@@ -23,6 +24,7 @@ public:
 
 private:
 	uint32_t system_clock_counter = 0;
+	uint8_t controller_state[2];
 public:
 	void insertCartridge(const std::shared_ptr<cartridge>& cartridge);
 	void reset();
